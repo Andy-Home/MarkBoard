@@ -1,11 +1,12 @@
 package com.andy.view.board;
 
 import android.graphics.PointF;
+import android.util.Log;
 
 import java.util.Observable;
 
 public class Board extends Observable {
-
+    private final String TAG = Board.class.getSimpleName();
     /**
      * 缩放倍数与缩放中心点
      */
@@ -31,8 +32,19 @@ public class Board extends Observable {
     }
 
     private void dataChanged() {
+        Log.d(TAG, "数据改变");
         setChanged();
         notifyObservers();
+    }
+
+    private int state = BoardView.MODE_NONE;
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
+    public int getState() {
+        return state;
     }
 
     public float getScale() {

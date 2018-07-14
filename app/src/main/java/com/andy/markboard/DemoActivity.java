@@ -16,8 +16,13 @@ public class DemoActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         final StandardBoard board = findViewById(R.id.board);
-        final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-        board.setBackground(bitmap);
+        board.init(new StandardBoard.InitListener() {
+            @Override
+            public void onInit() {
+                final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
+                board.setBackground(bitmap);
+            }
+        });
 
     }
 }

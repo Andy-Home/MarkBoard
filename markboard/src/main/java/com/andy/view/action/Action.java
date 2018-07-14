@@ -1,5 +1,6 @@
 package com.andy.view.action;
 
+import android.graphics.Canvas;
 import android.graphics.PointF;
 
 import java.util.Observer;
@@ -15,4 +16,6 @@ public abstract class Action implements Observer {
     public void setOriginalPoint(PointF originalPoint) {
         this.originalPoint = originalPoint;
     }
+
+    abstract public void onDraw(Canvas canvas);
 }
