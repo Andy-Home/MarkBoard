@@ -3,13 +3,18 @@ package com.andy.markboard;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
+import android.view.View;
 
 import com.andy.view.board.StandardBoard;
 
-public class DemoActivity extends Activity {
+import java.util.List;
 
+public class DemoActivity extends Activity {
+    private final String TAG = DemoActivity.class.getSimpleName();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,5 +29,21 @@ public class DemoActivity extends Activity {
             }
         });
 
+        findViewById(R.id.fun1).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<PointF> data = board.getActionValue();
+                for (PointF point : data) {
+                    Log.i(TAG, "x:" + point.x + " y:" + point.y);
+                }
+            }
+        });
+
+        findViewById(R.id.fun2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                board.clear();
+            }
+        });
     }
 }

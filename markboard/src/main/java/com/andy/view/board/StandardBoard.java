@@ -20,6 +20,7 @@ import com.andy.view.action.Action;
 import com.andy.view.action.StandardAction;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
     private final String TAG = StandardBoard.class.getSimpleName();
@@ -48,6 +49,7 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
 
     public void init(InitListener listener) {
         mInitListener = listener;
+        isInit = false;
     }
 
     public interface InitListener {
@@ -71,10 +73,9 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
      * 缩放的两个值，用来计算两者之间的比例值
      */
     private float startDis;
-    private float endDis;
-    private PointF midPoint;
 
     private PointF startPoint = new PointF();
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
@@ -89,11 +90,11 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
                     matrix.postTranslate(dx, dy);
                     mBoard.setOffset(dx, dy);
                 } else if (getStatus() == MODE_ZOOM) {
-                    endDis = ViewUtils.distance(event);
+                    float endDis = ViewUtils.distance(event);
                     //横竖轴放大倍数一样，保证图片比例
                     float scale = endDis / startDis;
                     startDis = endDis;
-                    midPoint = ViewUtils.mid(event);
+                    PointF midPoint = ViewUtils.mid(event);
                     matrix.postScale(scale, scale, midPoint.x, midPoint.y);
                     if (checkMinimum()) {
                         matrix.set(temp);
@@ -148,36 +149,36 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
         return values[Matrix.MSCALE_X] < 1f;
     }
 
-    public float getTotalScale() {
-        float original = (float) ViewUtils
-                .getLength(originalTop, originalBottom, originalLeft, originalRight);
-
-        float current = (float) ViewUtils
-                .getLength(getTop(), getBottom(), getLeft(), getRight());
-
-        return current / original;
-    }
-
+    /**
+     * 创建Action
+     *
+     * @param touchX 相对当前触摸View的坐标系的X
+     * @param touchY 相对当前触摸View的坐标系的Y
+     */
     public void createAction(float touchX, float touchY) {
-        Action action;
-        //未移动时
-        if (getTotalScale() == 1f
-                && getTop() == originalTop
-                && getLeft() == originalLeft) {
-            action = new StandardAction(mBoard, new PointF(touchX, touchY), new PointF(touchX, touchY));
-        } else {
-            PointF current = new PointF(touchX, touchY);
+        float[] values = new float[9];
+        matrix.getValues(values);
+        float left = values[2];
+        float top = values[5];
+        float right = values[2] + bitmapWidth * values[0];
 
-            float x = (touchX - getLeft()) * (originalRight - originalLeft) / (getRight() - getLeft());
-            float y = (touchY - getBottom()) * (originalBottom - originalTop) / (getBottom() - getTop());
-            PointF original = new PointF(x + originalLeft, y + originalTop);
-            action = new StandardAction(mBoard, original, current);
-        }
+        float bottom = values[5] + bitmapHeight * values[4];
+        //Log.d(TAG,"图片宽高： l:"+values[2]+" t:"+values[5]+" r:"+right+" b:"+bottom);
+        Action action;
+
+        PointF current = new PointF(touchX, touchY);
+
+        float x = (touchX - left) * (originalBitmapRight - originalBitmapLeft) / (right - left);
+        float y = (touchY - top) * (originalBitmapBottom - originalBitmapTop) / (bottom - top);
+        PointF original = new PointF(x + originalBitmapLeft, y + originalBitmapTop);
+        action = new StandardAction(mBoard, original, current);
+
         Log.d(TAG, "创建Action成功");
         mActionList.add(action);
     }
 
     private Paint mPaint;
+
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Log.d(TAG, "surface 创建成功");
@@ -185,6 +186,8 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
     }
 
     private int mWidth, mHeight;
+    private boolean isInit = false;
+
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         Log.d(TAG, "surface 大小改变");
@@ -192,7 +195,11 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
 
         mWidth = width;
         mHeight = height;
-        mInitListener.onInit();
+        if (!isInit) {
+            isInit = true;
+            mInitListener.onInit();
+        }
+
         redraw();
     }
 
@@ -201,13 +208,43 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
         Log.d(TAG, "surface 销毁");
     }
 
-    private int bgClolr = Color.WHITE;
+    private int bgColor = Color.WHITE;
     private Bitmap bgBitmap = null;
+
+    //传入图片初次显示时的边界值，以SurfaceView为相对坐标系
+    private int originalBitmapLeft, originalBitmapRight, originalBitmapTop, originalBitmapBottom;
+
+    int bitmapWidth, bitmapHeight;
 
     public void setBackground(Bitmap bitmap) {
         Log.d(TAG, "设置图片");
         bgBitmap = ImageUtils.createBitmapForView(bitmap, mWidth, mHeight);
+        Log.d(TAG, "图片宽：" + bgBitmap.getWidth() + " 图片高：" + bgBitmap.getHeight());
+        bitmapWidth = bgBitmap.getWidth();
+        bitmapHeight = bgBitmap.getHeight();
+        if (bgBitmap.getWidth() != mWidth) {
+            int marginWidth = (mWidth - bgBitmap.getWidth()) / 2;
+            matrix.postTranslate(marginWidth, 0);
+
+            originalBitmapTop = 0;
+            originalBitmapBottom = mHeight;
+            originalBitmapLeft = marginWidth;
+            originalBitmapRight = mWidth - marginWidth;
+
+        } else if (bgBitmap.getHeight() != mHeight) {
+            int marginHeight = (mHeight - bgBitmap.getHeight()) / 2;
+            matrix.postTranslate(0, marginHeight);
+
+            originalBitmapLeft = 0;
+            originalBitmapRight = mWidth;
+            originalBitmapTop = marginHeight;
+            originalBitmapBottom = mHeight - marginHeight;
+        }
         redraw();
+    }
+
+    public void setColor(int color) {
+        bgColor = color;
     }
 
     private void redraw() {
@@ -217,14 +254,45 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
             canvas.drawPaint(mPaint);
             mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
             if (bgBitmap != null) {
+                canvas.drawColor(bgColor);
                 canvas.drawBitmap(bgBitmap, matrix, mPaint);
+
             } else {
-                canvas.drawColor(bgClolr);
+                canvas.drawColor(bgColor);
             }
             for (Action action : mActionList) {
                 action.onDraw(canvas);
             }
             mHolder.unlockCanvasAndPost(canvas);
         }
+    }
+
+    /**
+     * 清空内容
+     */
+    public void clear() {
+        bgBitmap = null;
+        mActionList.clear();
+        redraw();
+    }
+
+    /**
+     * 获取所有Action在图片中的相对位置比例
+     */
+    public List<PointF> getActionValue() {
+        if (mActionList.isEmpty()) {
+            return null;
+        }
+        List<PointF> value = new ArrayList<>();
+
+        for (Action action : mActionList) {
+            //获取Action在View正常情况下的点的位置
+            PointF point = action.getOriginalPoint();
+            float x = (point.x - originalBitmapLeft) / (originalBitmapRight - originalBitmapLeft);
+            float y = (point.y - originalBitmapTop) / (originalBitmapBottom - originalBitmapTop);
+            PointF item = new PointF(x, y);
+            value.add(item);
+        }
+        return value;
     }
 }

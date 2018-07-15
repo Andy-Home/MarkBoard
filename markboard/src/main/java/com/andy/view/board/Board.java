@@ -1,7 +1,6 @@
 package com.andy.view.board;
 
 import android.graphics.PointF;
-import android.util.Log;
 
 import java.util.Observable;
 
@@ -32,7 +31,6 @@ public class Board extends Observable {
     }
 
     private void dataChanged() {
-        Log.d(TAG, "数据改变");
         setChanged();
         notifyObservers();
     }
