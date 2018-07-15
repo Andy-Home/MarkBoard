@@ -23,6 +23,13 @@
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="50dp" />
+
+        <Button
+            android:id="@+id/fun3"
+            android:text="还原数据"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="50dp" />
     </LinearLayout>
 
     <com.andy.view.board.StandardBoard

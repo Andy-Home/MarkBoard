@@ -271,7 +271,7 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
      * 清空内容
      */
     public void clear() {
-        bgBitmap = null;
+        //bgBitmap = null;
         mActionList.clear();
         redraw();
     }
@@ -295,4 +295,43 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
         }
         return value;
     }
+
+    public boolean putActionValue(List<PointF> list) {
+        if (bgBitmap == null) {
+            return false;
+        }
+
+        for (PointF point : list) {
+            float x = (originalBitmapRight - originalBitmapLeft) * point.x + originalBitmapLeft;
+            float y = (originalBitmapBottom - originalBitmapTop) * point.y + originalBitmapTop;
+            restoreAction(x, y);
+        }
+        redraw();
+        return true;
+    }
+
+
+    private void restoreAction(float originalX, float originalY) {
+        float[] values = new float[9];
+        matrix.getValues(values);
+        float left = values[2];
+        float top = values[5];
+        float right = values[2] + bitmapWidth * values[0];
+
+        float bottom = values[5] + bitmapHeight * values[4];
+        //Log.d(TAG,"图片宽高： l:"+values[2]+" t:"+values[5]+" r:"+right+" b:"+bottom);
+        Action action;
+
+        PointF original = new PointF(originalX, originalY);
+
+        float x = (originalX - originalBitmapLeft) * (right - left) / (originalBitmapRight - originalBitmapLeft);
+        float y = (originalY - originalBitmapTop) * (bottom - top) / (originalBitmapBottom - originalBitmapTop);
+
+        PointF current = new PointF(x + left, y + top);
+        action = new StandardAction(mBoard, original, current);
+
+        Log.d(TAG, "创建Action成功");
+        mActionList.add(action);
+    }
+
 }

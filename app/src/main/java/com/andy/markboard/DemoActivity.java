@@ -11,10 +11,12 @@ import android.view.View;
 
 import com.andy.view.board.StandardBoard;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DemoActivity extends Activity {
     private final String TAG = DemoActivity.class.getSimpleName();
+    private List<PointF> mData = new ArrayList<>();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +35,8 @@ public class DemoActivity extends Activity {
             @Override
             public void onClick(View v) {
                 List<PointF> data = board.getActionValue();
+                mData.clear();
+                mData.addAll(data);
                 for (PointF point : data) {
                     Log.i(TAG, "x:" + point.x + " y:" + point.y);
                 }
@@ -43,6 +47,13 @@ public class DemoActivity extends Activity {
             @Override
             public void onClick(View v) {
                 board.clear();
+            }
+        });
+
+        findViewById(R.id.fun3).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                board.putActionValue(mData);
             }
         });
     }
