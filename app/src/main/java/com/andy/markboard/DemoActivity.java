@@ -1,14 +1,12 @@
 package com.andy.markboard;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.View;
 
+import com.andy.view.action.StandardAction;
 import com.andy.view.board.StandardBoard;
 
 import java.util.ArrayList;
@@ -26,20 +24,21 @@ public class DemoActivity extends Activity {
         board.init(new StandardBoard.InitListener() {
             @Override
             public void onInit() {
-                final Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.test);
-                board.setBackground(bitmap);
+                board.setBoardContent(R.mipmap.test);
+                board.showPointer(true);
             }
         });
 
         findViewById(R.id.fun1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<PointF> data = board.getActionValue();
+                List<PointF> data = board.getActionValues();
                 mData.clear();
-                mData.addAll(data);
-                for (PointF point : data) {
-                    Log.i(TAG, "x:" + point.x + " y:" + point.y);
+                if (data == null) {
+                    return;
                 }
+
+                mData.addAll(data);
             }
         });
 
@@ -53,7 +52,14 @@ public class DemoActivity extends Activity {
         findViewById(R.id.fun3).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                board.putActionValue(mData);
+                board.putDefaultAction(mData);
+            }
+        });
+
+        findViewById(R.id.fun4).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                board.createAction(new StandardAction());
             }
         });
     }

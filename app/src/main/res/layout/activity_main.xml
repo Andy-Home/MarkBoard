@@ -30,12 +30,19 @@
             android:layout_weight="1"
             android:layout_width="0dp"
             android:layout_height="50dp" />
+
+        <Button
+            android:id="@+id/fun4"
+            android:text="打点"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="50dp" />
     </LinearLayout>
 
     <com.andy.view.board.StandardBoard
         android:layout_above="@id/layout"
         android:id="@+id/board"
         android:layout_width="match_parent"
-        android:layout_height="500dp" />
+        android:layout_height="match_parent" />
 
 </RelativeLayout>

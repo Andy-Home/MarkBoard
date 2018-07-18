@@ -18,4 +18,6 @@ public abstract class Action implements Observer {
     }
 
     abstract public void onDraw(Canvas canvas);
+
+    public float x, y;
 }

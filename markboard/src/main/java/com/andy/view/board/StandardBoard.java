@@ -2,71 +2,51 @@ package com.andy.view.board;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.PointF;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
 
-import com.andy.utils.ImageUtils;
+import com.andy.R;
 import com.andy.utils.ViewUtils;
-import com.andy.view.action.Action;
 import com.andy.view.action.StandardAction;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
+public class StandardBoard extends BoardView {
     private final String TAG = StandardBoard.class.getSimpleName();
-
-    private ArrayList<Action> mActionList;
 
     public StandardBoard(Context context) {
         super(context);
-        init();
     }
 
     public StandardBoard(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
     }
 
     public StandardBoard(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
     }
 
-    private Matrix matrix = null;
-    private SurfaceHolder mHolder = null;
+    private float centerX, centerY;
+    private Bitmap mPointer = null;
 
-    private InitListener mInitListener;
+    public void showPointer(boolean isShow) {
+        if (isShow) {
+            BitmapFactory.Options opts = new BitmapFactory.Options();
 
-    public void init(InitListener listener) {
-        mInitListener = listener;
-        isInit = false;
-    }
+            opts.inJustDecodeBounds = false;
+            opts.inPreferredConfig = Bitmap.Config.RGB_565;
+            mPointer = BitmapFactory.decodeResource(getResources(), R.mipmap.pointer, opts);
 
-    public interface InitListener {
-        void onInit();
-    }
-
-    private void init() {
-        mHolder = getHolder();
-        mHolder.addCallback(this);
-
-        setFocusable(true);
-        setKeepScreenOn(true);
-        setFocusableInTouchMode(true);
-
-        matrix = new Matrix();
-
-        mActionList = new ArrayList<>();
+            centerX = getLeft() + (getWidth() / 2);
+            centerY = getTop() + (getHeight() / 2);
+        } else {
+            mPointer = null;
+        }
+        notifyDataChange();
     }
 
     /**
@@ -88,7 +68,11 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
                     float dy = event.getY() - startPoint.y;
                     startPoint.set(event.getX(), event.getY());
                     matrix.postTranslate(dx, dy);
-                    mBoard.setOffset(dx, dy);
+                    if (checkCrossing()) {
+                        matrix.set(temp);
+                    } else {
+                        mBoard.setOffset(dx, dy);
+                    }
                 } else if (getStatus() == MODE_ZOOM) {
                     float endDis = ViewUtils.distance(event);
                     //横竖轴放大倍数一样，保证图片比例
@@ -96,19 +80,18 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
                     startDis = endDis;
                     PointF midPoint = ViewUtils.mid(event);
                     matrix.postScale(scale, scale, midPoint.x, midPoint.y);
-                    if (checkMinimum()) {
+                    if (checkMinimum() || checkCrossing()) {
                         matrix.set(temp);
                     } else {
                         mBoard.setScale(scale, midPoint);
                     }
                 }
                 if (!matrix.equals(temp)) {
-                    redraw();
+                    notifyDataChange();
                 }
                 break;
 
             case MotionEvent.ACTION_DOWN:
-                clickDownTime = System.currentTimeMillis();
                 startPoint.set(event.getX(), event.getY());
                 setState(MODE_DRAG);
                 return true;
@@ -120,23 +103,14 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
 
             case MotionEvent.ACTION_UP:
                 setState(MODE_NONE);
-                if (isClick()) {
-                    createAction(event.getX(), event.getY());
-                }
-                redraw();
+                notifyDataChange();
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 setState(MODE_NONE);
-                redraw();
+                notifyDataChange();
                 break;
         }
         return super.onTouchEvent(event);
-    }
-
-    private long clickDownTime;
-
-    private boolean isClick() {
-        return System.currentTimeMillis() - clickDownTime < 500;
     }
 
     /**
@@ -149,189 +123,51 @@ public class StandardBoard extends BoardView implements SurfaceHolder.Callback {
         return values[Matrix.MSCALE_X] < 1f;
     }
 
+    private boolean checkCrossing() {
+        float[] values = new float[9];
+        matrix.getValues(values);
+        float left = values[2];
+        float top = values[5];
+        float right = values[2] + bitmapWidth * values[0];
+        float bottom = values[5] + bitmapHeight * values[4];
+
+        return left > centerX || right < centerX || top > centerY || bottom < centerY;
+    }
+
     /**
      * 创建Action
-     *
-     * @param touchX 相对当前触摸View的坐标系的X
-     * @param touchY 相对当前触摸View的坐标系的Y
      */
-    public void createAction(float touchX, float touchY) {
+    public void createAction(StandardAction action) {
         float[] values = new float[9];
         matrix.getValues(values);
         float left = values[2];
         float top = values[5];
         float right = values[2] + bitmapWidth * values[0];
-
         float bottom = values[5] + bitmapHeight * values[4];
-        //Log.d(TAG,"图片宽高： l:"+values[2]+" t:"+values[5]+" r:"+right+" b:"+bottom);
-        Action action;
 
-        PointF current = new PointF(touchX, touchY);
+        action.setObserver(mBoard);
 
-        float x = (touchX - left) * (originalBitmapRight - originalBitmapLeft) / (right - left);
-        float y = (touchY - top) * (originalBitmapBottom - originalBitmapTop) / (bottom - top);
+        PointF current = new PointF(centerX, centerY);
+        action.setCurrentPoint(current);
+
+        float x = (centerX - left) * (originalBitmapRight - originalBitmapLeft) / (right - left);
+        float y = (centerY - top) * (originalBitmapBottom - originalBitmapTop) / (bottom - top);
         PointF original = new PointF(x + originalBitmapLeft, y + originalBitmapTop);
-        action = new StandardAction(mBoard, original, current);
+        action.setOriginalPoint(original);
+
+        action.x = (original.x - originalBitmapLeft) / (originalBitmapRight - originalBitmapLeft);
+        action.y = (original.y - originalBitmapTop) / (originalBitmapBottom - originalBitmapTop);
 
         Log.d(TAG, "创建Action成功");
-        mActionList.add(action);
-    }
-
-    private Paint mPaint;
-
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        Log.d(TAG, "surface 创建成功");
-        mPaint = new Paint();
-    }
-
-    private int mWidth, mHeight;
-    private boolean isInit = false;
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.d(TAG, "surface 大小改变");
-        Log.d(TAG, "surfaceView width=" + width + " height=" + height);
-
-        mWidth = width;
-        mHeight = height;
-        if (!isInit) {
-            isInit = true;
-            mInitListener.onInit();
-        }
-
-        redraw();
+        addAction(action);
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.d(TAG, "surface 销毁");
-    }
-
-    private int bgColor = Color.WHITE;
-    private Bitmap bgBitmap = null;
-
-    //传入图片初次显示时的边界值，以SurfaceView为相对坐标系
-    private int originalBitmapLeft, originalBitmapRight, originalBitmapTop, originalBitmapBottom;
-
-    int bitmapWidth, bitmapHeight;
-
-    public void setBackground(Bitmap bitmap) {
-        Log.d(TAG, "设置图片");
-        bgBitmap = ImageUtils.createBitmapForView(bitmap, mWidth, mHeight);
-        Log.d(TAG, "图片宽：" + bgBitmap.getWidth() + " 图片高：" + bgBitmap.getHeight());
-        bitmapWidth = bgBitmap.getWidth();
-        bitmapHeight = bgBitmap.getHeight();
-        if (bgBitmap.getWidth() != mWidth) {
-            int marginWidth = (mWidth - bgBitmap.getWidth()) / 2;
-            matrix.postTranslate(marginWidth, 0);
-
-            originalBitmapTop = 0;
-            originalBitmapBottom = mHeight;
-            originalBitmapLeft = marginWidth;
-            originalBitmapRight = mWidth - marginWidth;
-
-        } else if (bgBitmap.getHeight() != mHeight) {
-            int marginHeight = (mHeight - bgBitmap.getHeight()) / 2;
-            matrix.postTranslate(0, marginHeight);
-
-            originalBitmapLeft = 0;
-            originalBitmapRight = mWidth;
-            originalBitmapTop = marginHeight;
-            originalBitmapBottom = mHeight - marginHeight;
-        }
-        redraw();
-    }
-
-    public void setColor(int color) {
-        bgColor = color;
-    }
-
-    private void redraw() {
-        synchronized (StandardBoard.class) {
-            Canvas canvas = mHolder.lockCanvas();
-            mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-            canvas.drawPaint(mPaint);
-            mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
-            if (bgBitmap != null) {
-                canvas.drawColor(bgColor);
-                canvas.drawBitmap(bgBitmap, matrix, mPaint);
-
-            } else {
-                canvas.drawColor(bgColor);
-            }
-            for (Action action : mActionList) {
-                action.onDraw(canvas);
-            }
-            mHolder.unlockCanvasAndPost(canvas);
+    protected void reDraw(Canvas canvas) {
+        if (mPointer != null) {
+            Rect src = new Rect(0, 0, mPointer.getWidth(), mPointer.getHeight());
+            Rect dst = new Rect((int) centerX, (int) centerY, (int) centerX + 100, (int) centerY + 100);
+            canvas.drawBitmap(mPointer, src, dst, mPaint);
         }
     }
-
-    /**
-     * 清空内容
-     */
-    public void clear() {
-        //bgBitmap = null;
-        mActionList.clear();
-        redraw();
-    }
-
-    /**
-     * 获取所有Action在图片中的相对位置比例
-     */
-    public List<PointF> getActionValue() {
-        if (mActionList.isEmpty()) {
-            return null;
-        }
-        List<PointF> value = new ArrayList<>();
-
-        for (Action action : mActionList) {
-            //获取Action在View正常情况下的点的位置
-            PointF point = action.getOriginalPoint();
-            float x = (point.x - originalBitmapLeft) / (originalBitmapRight - originalBitmapLeft);
-            float y = (point.y - originalBitmapTop) / (originalBitmapBottom - originalBitmapTop);
-            PointF item = new PointF(x, y);
-            value.add(item);
-        }
-        return value;
-    }
-
-    public boolean putActionValue(List<PointF> list) {
-        if (bgBitmap == null) {
-            return false;
-        }
-
-        for (PointF point : list) {
-            float x = (originalBitmapRight - originalBitmapLeft) * point.x + originalBitmapLeft;
-            float y = (originalBitmapBottom - originalBitmapTop) * point.y + originalBitmapTop;
-            restoreAction(x, y);
-        }
-        redraw();
-        return true;
-    }
-
-
-    private void restoreAction(float originalX, float originalY) {
-        float[] values = new float[9];
-        matrix.getValues(values);
-        float left = values[2];
-        float top = values[5];
-        float right = values[2] + bitmapWidth * values[0];
-
-        float bottom = values[5] + bitmapHeight * values[4];
-        //Log.d(TAG,"图片宽高： l:"+values[2]+" t:"+values[5]+" r:"+right+" b:"+bottom);
-        Action action;
-
-        PointF original = new PointF(originalX, originalY);
-
-        float x = (originalX - originalBitmapLeft) * (right - left) / (originalBitmapRight - originalBitmapLeft);
-        float y = (originalY - originalBitmapTop) * (bottom - top) / (originalBitmapBottom - originalBitmapTop);
-
-        PointF current = new PointF(x + left, y + top);
-        action = new StandardAction(mBoard, original, current);
-
-        Log.d(TAG, "创建Action成功");
-        mActionList.add(action);
-    }
-
 }

@@ -17,11 +17,35 @@ public class StandardAction extends Action {
 
     private Paint mPaint;
 
+    public StandardAction() {
+        init();
+    }
+
+    public StandardAction(Observable o) {
+        o.addObserver(this);
+        init();
+    }
+
     public StandardAction(Observable o, PointF original, PointF current) {
-        setOriginalPoint(original);
-        Log.d(TAG, "action设置监听");
+        super.setOriginalPoint(original);
         o.addObserver(this);
         currentPoint = current;
+        init();
+    }
+
+    public void setOriginalPoint(PointF point) {
+        super.setOriginalPoint(point);
+    }
+
+    public void setCurrentPoint(PointF point) {
+        currentPoint = point;
+    }
+
+    public void setObserver(Observable o) {
+        o.addObserver(this);
+    }
+
+    private void init() {
         mPaint = new Paint();
         mPaint.setColor(Color.BLUE);
     }
