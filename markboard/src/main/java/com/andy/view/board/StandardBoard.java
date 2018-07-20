@@ -94,6 +94,10 @@ public class StandardBoard extends BoardView {
             case MotionEvent.ACTION_DOWN:
                 startPoint.set(event.getX(), event.getY());
                 setState(MODE_DRAG);
+                if (event.getPointerCount() == 1) {
+                    super.removeCallback();
+                    postCheckLongTouch(event.getX(), event.getY());
+                }
                 return true;
 
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -103,6 +107,7 @@ public class StandardBoard extends BoardView {
 
             case MotionEvent.ACTION_UP:
                 setState(MODE_NONE);
+                super.removeCallback();
                 notifyDataChange();
                 break;
             case MotionEvent.ACTION_POINTER_UP:

@@ -12,6 +12,13 @@ public class ViewUtils {
         );
     }
 
+    public static double getLength(float t, float b, float l, float r) {
+        return Math.sqrt(
+                Math.pow((b - t), 2d)
+                        + Math.pow((l - r), 2d)
+        );
+    }
+
     /**
      * 计算双点触控的时候两触控点的距离
      */

@@ -6,6 +6,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.util.Log;
 
+import com.andy.utils.ViewUtils;
 import com.andy.view.board.Board;
 import com.andy.view.board.BoardView;
 
@@ -78,8 +79,16 @@ public class StandardAction extends Action {
         currentPoint.set(point.x + scaleX, point.y + scaleY);
     }
 
+    private float radius = 10f;
     @Override
     public void onDraw(Canvas canvas) {
-        canvas.drawCircle(currentPoint.x, currentPoint.y, 10f, mPaint);
+        canvas.drawCircle(currentPoint.x, currentPoint.y, radius, mPaint);
+    }
+
+
+    @Override
+    public boolean isTouch(float touchX, float touchY) {
+        double length = ViewUtils.getLength(touchX, currentPoint.x, touchY, currentPoint.y);
+        return length <= radius;
     }
 }

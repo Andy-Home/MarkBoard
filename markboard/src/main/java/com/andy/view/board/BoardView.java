@@ -298,4 +298,50 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
 
         mActionList.add(action);
     }
+
+    ///////////////////////////////////////////////////
+    protected void postCheckLongTouch(float x, float y) {
+        mLongPressRunnable.setPressLocation(x, y);
+        postDelayed(mLongPressRunnable, 500);
+    }
+
+    protected void removeCallback() {
+        removeCallbacks(mLongPressRunnable);
+    }
+
+    protected onActionLongClickListener mActionLongClickListener;
+
+    public void setActionLongClickListener(onActionLongClickListener listener) {
+        mActionLongClickListener = listener;
+    }
+
+    public interface onActionLongClickListener {
+
+        void onLongClick(int position);
+    }
+
+    private LongPressRunnable mLongPressRunnable = new LongPressRunnable();
+
+    private class LongPressRunnable implements Runnable {
+
+        private float x, y;
+
+        public void setPressLocation(float x, float y) {
+            this.x = (int) x;
+            this.y = (int) y;
+        }
+
+        @Override
+        public void run() {
+            for (int i = 0; i < mActionList.size(); i++) {
+                if (mActionList.get(i).isTouch(x, y)) {
+                    if (mActionLongClickListener != null) {
+                        mActionLongClickListener.onLongClick(i);
+                    }
+                    break;
+                }
+            }
+        }
+
+    }
 }

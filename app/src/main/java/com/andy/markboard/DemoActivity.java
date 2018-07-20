@@ -5,8 +5,10 @@ import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
+import android.widget.Toast;
 
 import com.andy.view.action.StandardAction;
+import com.andy.view.board.BoardView;
 import com.andy.view.board.StandardBoard;
 
 import java.util.ArrayList;
@@ -60,6 +62,13 @@ public class DemoActivity extends Activity {
             @Override
             public void onClick(View view) {
                 board.createAction(new StandardAction());
+            }
+        });
+
+        board.setActionLongClickListener(new BoardView.onActionLongClickListener() {
+            @Override
+            public void onLongClick(int position) {
+                Toast.makeText(DemoActivity.this, "长按位置：" + position, Toast.LENGTH_LONG).show();
             }
         });
     }

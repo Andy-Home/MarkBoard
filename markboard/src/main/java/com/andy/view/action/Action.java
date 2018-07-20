@@ -20,4 +20,9 @@ public abstract class Action implements Observer {
     abstract public void onDraw(Canvas canvas);
 
     public float x, y;
+
+    /**
+     * 是否已经触摸到Action
+     */
+    abstract public boolean isTouch(float touchX, float touchY);
 }
