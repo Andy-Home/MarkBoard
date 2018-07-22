@@ -4,7 +4,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.util.Log;
 
 import com.andy.utils.ViewUtils;
 import com.andy.view.board.Board;
@@ -49,11 +48,12 @@ public class StandardAction extends Action {
     private void init() {
         mPaint = new Paint();
         mPaint.setColor(Color.BLUE);
+        mPaint.setAntiAlias(true);
     }
 
     @Override
     public void update(Observable o, Object arg) {
-        Log.d(TAG, "action收到数据改变");
+        //Log.d(TAG, "action收到数据改变");
         if (o instanceof Board) {
             int state = ((Board) o).getState();
             switch (state) {
@@ -85,10 +85,9 @@ public class StandardAction extends Action {
         canvas.drawCircle(currentPoint.x, currentPoint.y, radius, mPaint);
     }
 
-
     @Override
     public boolean isTouch(float touchX, float touchY) {
         double length = ViewUtils.getLength(touchX, currentPoint.x, touchY, currentPoint.y);
-        return length <= radius;
+        return length <= radius + 20;
     }
 }

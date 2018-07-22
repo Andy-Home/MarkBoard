@@ -25,4 +25,14 @@ public abstract class Action implements Observer {
      * 是否已经触摸到Action
      */
     abstract public boolean isTouch(float touchX, float touchY);
+
+    private String content;
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getContent() {
+        return this.content;
+    }
 }

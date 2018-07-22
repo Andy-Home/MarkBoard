@@ -16,6 +16,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import com.andy.utils.ImageUtils;
+import com.andy.utils.VibratorUtils;
 import com.andy.view.action.Action;
 import com.andy.view.action.StandardAction;
 
@@ -39,22 +40,24 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
 
     public BoardView(Context context) {
         super(context);
-        init();
+        init(context);
     }
 
     public BoardView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init();
+        init(context);
     }
 
     public BoardView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        init();
+        init(context);
     }
 
     private SurfaceHolder mHolder = null;
 
-    private void init() {
+    private VibratorUtils mVibratorUtils;
+
+    private void init(Context context) {
         matrix = new Matrix();
         mActionList = new ArrayList<>();
 
@@ -63,6 +66,9 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         setFocusable(true);
         setKeepScreenOn(true);
         setFocusableInTouchMode(true);
+
+        mVibratorUtils = VibratorUtils.getInstance();
+        mVibratorUtils.init(context);
     }
 
     public void setState(int state) {
@@ -131,6 +137,8 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
     public void surfaceCreated(SurfaceHolder holder) {
         Log.d(TAG, "surface 创建成功");
         mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setFilterBitmap(true);
     }
 
     private int mWidth, mHeight;
@@ -200,7 +208,7 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
     }
 
 
-    //////////////////////////////操作Action////////////////////////////////////////
+    //////////////////////////////  操作Action   ////////////////////////////////////////
 
     /**
      * 获取所有Action在图片中的相对位置比例
@@ -224,6 +232,10 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
 
     private PointF getActionValue(Action action) {
         return new PointF(action.x, action.y);
+    }
+
+    public Action getAction(int index) {
+        return mActionList.get(index);
     }
 
     public boolean removeAction(Action action) {
@@ -299,10 +311,10 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         mActionList.add(action);
     }
 
-    ///////////////////////////////////////////////////
+    ///////////////////////////////// Listener //////////////////////////
     protected void postCheckLongTouch(float x, float y) {
         mLongPressRunnable.setPressLocation(x, y);
-        postDelayed(mLongPressRunnable, 500);
+        postDelayed(mLongPressRunnable, 1000);
     }
 
     protected void removeCallback() {
@@ -333,8 +345,10 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
 
         @Override
         public void run() {
+            Log.d(TAG, "触发长按点 x:" + x + " y:" + y);
             for (int i = 0; i < mActionList.size(); i++) {
                 if (mActionList.get(i).isTouch(x, y)) {
+                    mVibratorUtils.longClick();
                     if (mActionLongClickListener != null) {
                         mActionLongClickListener.onLongClick(i);
                     }

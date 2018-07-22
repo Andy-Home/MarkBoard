@@ -1,6 +1,7 @@
 package com.andy.markboard;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,7 @@ import java.util.List;
 public class DemoActivity extends Activity {
     private final String TAG = DemoActivity.class.getSimpleName();
     private List<PointF> mData = new ArrayList<>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,4 +74,6 @@ public class DemoActivity extends Activity {
             }
         });
     }
+
+    private AlertDialog mDialog;
 }
