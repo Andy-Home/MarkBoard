@@ -26,7 +26,7 @@ public abstract class Action implements Observer {
      */
     abstract public boolean isTouch(float touchX, float touchY);
 
-    private String content;
+    private String content = null;
 
     public void setContent(String content) {
         this.content = content;

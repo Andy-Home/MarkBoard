@@ -1,10 +1,16 @@
 package com.andy.view.action;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.Rect;
+import android.text.TextUtils;
 
+import com.andy.R;
 import com.andy.utils.ViewUtils;
 import com.andy.view.board.Board;
 import com.andy.view.board.BoardView;
@@ -80,8 +86,17 @@ public class StandardAction extends Action {
     }
 
     private float radius = 10f;
+
     @Override
     public void onDraw(Canvas canvas) {
+        if (!TextUtils.isEmpty(getContent())) {
+            if (mBitmapLabel != null) {
+                Rect src = new Rect(0, 0, mBitmapLabel.getWidth(), mBitmapLabel.getHeight());
+                Rect dst = new Rect((int) currentPoint.x - 5, (int) currentPoint.y - 5, (int) currentPoint.x + 50, (int) currentPoint.y + 50);
+                canvas.drawBitmap(mBitmapLabel, src, dst, mPaint);
+            }
+
+        }
         canvas.drawCircle(currentPoint.x, currentPoint.y, radius, mPaint);
     }
 
@@ -89,5 +104,20 @@ public class StandardAction extends Action {
     public boolean isTouch(float touchX, float touchY) {
         double length = ViewUtils.getLength(touchX, currentPoint.x, touchY, currentPoint.y);
         return length <= radius + 20;
+    }
+
+    private static Bitmap mBitmapLabel = null;
+
+    public static void showLabel(boolean isShow, Context context) {
+        if (isShow) {
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inJustDecodeBounds = false;
+            opts.inPreferredConfig = Bitmap.Config.RGB_565;
+            mBitmapLabel = BitmapFactory.decodeResource(context.getResources(), R.mipmap.label, opts);
+
+        } else {
+            mBitmapLabel = null;
+        }
+
     }
 }

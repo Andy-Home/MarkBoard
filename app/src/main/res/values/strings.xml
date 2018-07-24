@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Mark Board</string>
+    <string name="dialog_content_title">标签内容</string>
+    <string name="dialog_content_hint">请输入标签内容</string>
+    <string name="cancel">取消</string>
+    <string name="sure">确认</string>
 </resources>

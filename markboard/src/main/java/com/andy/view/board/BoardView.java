@@ -238,6 +238,10 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         return mActionList.get(index);
     }
 
+    public List<Action> getActionList() {
+        return mActionList;
+    }
+
     public boolean removeAction(Action action) {
         if (mActionList.remove(action)) {
             notifyDataChange();
@@ -269,7 +273,9 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         for (Action action : list) {
             float x = (originalBitmapRight - originalBitmapLeft) * action.x + originalBitmapLeft;
             float y = (originalBitmapBottom - originalBitmapTop) * action.y + originalBitmapTop;
-            restoreAction(x, y);
+            Action a = restoreAction(x, y);
+            a.setContent(action.getContent());
+            mActionList.add(a);
         }
         notifyDataChange();
         return true;
@@ -283,13 +289,13 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         for (PointF point : list) {
             float x = (originalBitmapRight - originalBitmapLeft) * point.x + originalBitmapLeft;
             float y = (originalBitmapBottom - originalBitmapTop) * point.y + originalBitmapTop;
-            restoreAction(x, y);
+            mActionList.add(restoreAction(x, y));
         }
         notifyDataChange();
         return true;
     }
 
-    private void restoreAction(float originalX, float originalY) {
+    private Action restoreAction(float originalX, float originalY) {
         float[] values = new float[9];
         matrix.getValues(values);
         float left = values[2];
@@ -308,7 +314,7 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         PointF current = new PointF(x + left, y + top);
         action = new StandardAction(mBoard, original, current);
 
-        mActionList.add(action);
+        return action;
     }
 
     ///////////////////////////////// Listener //////////////////////////

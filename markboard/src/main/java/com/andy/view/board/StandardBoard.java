@@ -49,6 +49,10 @@ public class StandardBoard extends BoardView {
         notifyDataChange();
     }
 
+    public void showLabel(boolean isShow) {
+        StandardAction.showLabel(isShow, getContext());
+    }
+
     /**
      * 缩放的两个值，用来计算两者之间的比例值
      */
