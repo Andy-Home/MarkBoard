@@ -41,8 +41,6 @@ public class StandardBoard extends BoardView {
             opts.inPreferredConfig = Bitmap.Config.RGB_565;
             mPointer = BitmapFactory.decodeResource(getResources(), R.mipmap.pointer, opts);
 
-            centerX = getLeft() + (getWidth() / 2);
-            centerY = getTop() + (getHeight() / 2);
         } else {
             mPointer = null;
         }
@@ -100,7 +98,7 @@ public class StandardBoard extends BoardView {
                 setState(MODE_DRAG);
                 if (event.getPointerCount() == 1) {
                     super.removeCallback();
-                    postCheckLongTouch(event.getX(), event.getY());
+                    super.postCheckLongTouch(event.getX(), event.getY());
                 }
                 return true;
 
@@ -112,8 +110,10 @@ public class StandardBoard extends BoardView {
             case MotionEvent.ACTION_UP:
                 setState(MODE_NONE);
                 super.removeCallback();
+                super.postCheckClick(event.getX(), event.getY());
                 notifyDataChange();
                 break;
+
             case MotionEvent.ACTION_POINTER_UP:
                 setState(MODE_NONE);
                 notifyDataChange();
@@ -174,6 +174,10 @@ public class StandardBoard extends BoardView {
     @Override
     protected void reDraw(Canvas canvas) {
         if (mPointer != null) {
+
+            centerX = getLeft() + (getWidth() / 2);
+            centerY = getTop() + (getHeight() / 2);
+
             Rect src = new Rect(0, 0, mPointer.getWidth(), mPointer.getHeight());
             Rect dst = new Rect((int) centerX, (int) centerY, (int) centerX + 100, (int) centerY + 100);
             canvas.drawBitmap(mPointer, src, dst, mPaint);

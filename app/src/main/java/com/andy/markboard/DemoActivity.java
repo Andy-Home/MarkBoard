@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.Toast;
 
 import com.andy.view.ContentDialog;
 import com.andy.view.action.Action;
@@ -28,14 +27,9 @@ public class DemoActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         vBoard = findViewById(R.id.board);
-        vBoard.init(new StandardBoard.InitListener() {
-            @Override
-            public void onInit() {
-                vBoard.setBoardContent(R.mipmap.test);
-                vBoard.showPointer(true);
-                vBoard.showLabel(true);
-            }
-        });
+        vBoard.setBoardContent(R.mipmap.test);
+        vBoard.showPointer(true);
+        vBoard.showLabel(true);
 
         findViewById(R.id.fun1).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,15 +79,27 @@ public class DemoActivity extends Activity {
                             action.setContent(content);
                             vBoard.notifyDataChange();
                             vContentDialog.cancel();
+                            vContentDialog.clearContent();
                         }
 
                         @Override
                         public void onCancel() {
                             vContentDialog.cancel();
+                            vContentDialog.clearContent();
                         }
                     });
+                }
+            }
+        });
+
+        vBoard.setActionClickListener(new BoardView.onActionClickListener() {
+            @Override
+            public void onClick(int position) {
+                StandardAction action = (StandardAction) vBoard.getAction(position);
+                if (action.isShowContent()) {
+                    action.hideContent();
                 } else {
-                    Toast.makeText(DemoActivity.this, action.getContent(), Toast.LENGTH_LONG).show();
+                    action.showContent(DemoActivity.this);
                 }
             }
         });

@@ -84,18 +84,30 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
     protected int originalBitmapLeft, originalBitmapRight, originalBitmapTop, originalBitmapBottom;
     protected int bitmapWidth, bitmapHeight;
 
-    private int bgColor = Color.WHITE;
+    private int bgColor = Color.BLACK;
     private Bitmap bgBitmap = null;
 
     public void setBackgroundColor(int color) {
         bgColor = color;
     }
 
-    public void setBoardContent(Bitmap bitmap) {
-        Log.d(TAG, "设置图片");
-        bgBitmap = ImageUtils.createBitmapForView(bitmap, mWidth, mHeight);
-        Log.d(TAG, "图片宽：" + bgBitmap.getWidth() + " 图片高：" + bgBitmap.getHeight());
-        initValue();
+    public void setBoardContent(final Bitmap bitmap) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (!isInit) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Log.d(TAG, "设置图片");
+                bgBitmap = ImageUtils.createBitmapForView(bitmap, mWidth, mHeight);
+                Log.d(TAG, "图片宽：" + bgBitmap.getWidth() + " 图片高：" + bgBitmap.getHeight());
+                initValue();
+            }
+        }).start();
     }
 
     public void setBoardContent(int resId) {
@@ -151,10 +163,8 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
 
         mWidth = width;
         mHeight = height;
-        if (!isInit) {
-            isInit = true;
-            mInitListener.onInit();
-        }
+        isInit = true;
+        viewChanged();
 
         notifyDataChange();
     }
@@ -162,41 +172,53 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "surface 销毁");
+        isInit = false;
+    }
+
+    private void viewChanged() {
+        Action.setParentView(mWidth, mHeight);
     }
 
     protected void reDraw(Canvas canvas) {
     }
 
     public void notifyDataChange() {
+
+        if (!isInit) {
+            return;
+        }
+
         synchronized (BoardView.class) {
+
             Canvas canvas = mHolder.lockCanvas();
             mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
             canvas.drawPaint(mPaint);
             mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
+
             if (bgBitmap != null) {
+
                 canvas.drawColor(bgColor);
                 canvas.drawBitmap(bgBitmap, matrix, mPaint);
+
+                float[] values = new float[9];
+                matrix.getValues(values);
+                float left = values[2];
+                float top = values[5];
+                float right = values[2] + bitmapWidth * values[0];
+                float bottom = values[5] + bitmapHeight * values[4];
+                Action.setBackgroundPosition(left, right, top, bottom);
 
             } else {
                 canvas.drawColor(bgColor);
             }
+
             for (Action action : mActionList) {
                 action.onDraw(canvas);
             }
+
             reDraw(canvas);
             mHolder.unlockCanvasAndPost(canvas);
         }
-    }
-
-    private InitListener mInitListener;
-
-    public void init(InitListener listener) {
-        mInitListener = listener;
-        isInit = false;
-    }
-
-    public interface InitListener {
-        void onInit();
     }
 
     /**
@@ -238,7 +260,7 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         return mActionList.get(index);
     }
 
-    public List<Action> getActionList() {
+    public ArrayList<Action> getActionList() {
         return mActionList;
     }
 
@@ -275,6 +297,8 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
             float y = (originalBitmapBottom - originalBitmapTop) * action.y + originalBitmapTop;
             Action a = restoreAction(x, y);
             a.setContent(action.getContent());
+            a.x = action.x;
+            a.y = action.y;
             mActionList.add(a);
         }
         notifyDataChange();
@@ -344,7 +368,7 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
 
         private float x, y;
 
-        public void setPressLocation(float x, float y) {
+        private void setPressLocation(float x, float y) {
             this.x = (int) x;
             this.y = (int) y;
         }
@@ -357,11 +381,52 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
                     mVibratorUtils.longClick();
                     if (mActionLongClickListener != null) {
                         mActionLongClickListener.onLongClick(i);
+                        notifyDataChange();
                     }
                     break;
                 }
             }
         }
 
+    }
+
+    protected onActionClickListener mActionClickListener;
+
+    public void setActionClickListener(onActionClickListener listener) {
+        mActionClickListener = listener;
+    }
+
+    public interface onActionClickListener {
+        void onClick(int position);
+    }
+
+    protected void postCheckClick(float x, float y) {
+        PerformClick performClick = new PerformClick();
+        performClick.setPressLocation(x, y);
+        post(performClick);
+    }
+
+    private final class PerformClick implements Runnable {
+
+        private float x, y;
+
+        private void setPressLocation(float x, float y) {
+            this.x = (int) x;
+            this.y = (int) y;
+        }
+
+        @Override
+        public void run() {
+            for (int i = 0; i < mActionList.size(); i++) {
+                if (mActionList.get(i).isTouch(x, y)) {
+                    mVibratorUtils.click();
+                    if (mActionClickListener != null) {
+                        mActionClickListener.onClick(i);
+                        notifyDataChange();
+                    }
+                    break;
+                }
+            }
+        }
     }
 }

@@ -51,6 +51,10 @@ public class ContentDialog extends Dialog {
         vSure.setText(str);
     }
 
+    public void clearContent() {
+        vContent.setText("");
+    }
+
     private void setListener() {
         vCancel.setOnClickListener(new View.OnClickListener() {
             @Override
