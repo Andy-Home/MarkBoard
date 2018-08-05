@@ -12,37 +12,44 @@
 
         <Button
             android:id="@+id/fun1"
-            android:text="打印数据"
-            android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="50dp" />
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="打印数据" />
 
         <Button
             android:id="@+id/fun2"
-            android:text="清空"
-            android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="50dp" />
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="清空" />
 
         <Button
             android:id="@+id/fun3"
-            android:text="还原数据"
-            android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="50dp" />
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="还原数据" />
 
         <Button
             android:id="@+id/fun4"
-            android:text="打点"
-            android:layout_weight="1"
             android:layout_width="0dp"
-            android:layout_height="50dp" />
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="打点" />
+
+        <Button
+            android:id="@+id/fun5"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="跳转" />
     </LinearLayout>
 
     <com.andy.view.board.StandardBoard
-        android:layout_above="@id/layout"
         android:id="@+id/board"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_above="@id/layout" />
 
 </RelativeLayout>

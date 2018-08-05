@@ -2,6 +2,7 @@ package com.andy.markboard;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.graphics.PointF;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -64,6 +65,14 @@ public class DemoActivity extends Activity {
             @Override
             public void onClick(View view) {
                 board.createAction(new StandardAction());
+            }
+        });
+
+        findViewById(R.id.fun5).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(DemoActivity.this, DemoFragmentActivity.class);
+                startActivity(intent);
             }
         });
 
