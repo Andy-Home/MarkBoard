@@ -11,21 +11,17 @@ import com.andy.view.board.StandardBoard;
 
 public class DemoFragment extends Fragment {
 
-    private StandardBoard board;
+    private StandardBoard vBoard;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View view = LayoutInflater.from(getContext()).inflate(R.layout.fragment_demo, null);
-        board = view.findViewById(R.id.board);
-        board.init(new StandardBoard.InitListener() {
-            @Override
-            public void onInit() {
-                board.setBoardContent(R.mipmap.test);
-                board.showPointer(true);
-            }
-        });
+        vBoard = view.findViewById(R.id.board);
+        vBoard.setBoardContent(R.mipmap.test);
+        vBoard.showPointer(true);
+        vBoard.showLabel(true);
         return view;
     }
 }

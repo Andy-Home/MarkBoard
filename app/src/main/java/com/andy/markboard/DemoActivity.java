@@ -1,6 +1,7 @@
 package com.andy.markboard;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -73,7 +74,7 @@ public class DemoActivity extends Activity {
             }
         });
 
-        board.setActionLongClickListener(new BoardView.onActionLongClickListener() {
+        vBoard.setActionLongClickListener(new BoardView.onActionLongClickListener() {
             @Override
             public void onLongClick(final int position) {
                 final Action action = vBoard.getAction(position);
