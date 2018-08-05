@@ -1,5 +1,6 @@
 package com.andy.utils;
 
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.view.MotionEvent;
 
@@ -35,5 +36,18 @@ public class ViewUtils {
         float midX = (event.getX(1) + event.getX(0)) / 2;
         float midY = (event.getY(1) + event.getY(0)) / 2;
         return new PointF(midX, midY);
+    }
+
+    public static int getTextWidth(Paint paint, String text) {
+        int iRet = 0;
+        if (text != null && text.length() > 0) {
+            int len = text.length();
+            float[] widths = new float[len];
+            paint.getTextWidths(text, widths);
+            for (int j = 0; j < len; j++) {
+                iRet += (int) Math.ceil(widths[j]);
+            }
+        }
+        return iRet;
     }
 }

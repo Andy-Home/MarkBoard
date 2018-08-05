@@ -31,6 +31,15 @@ public class VibratorUtils {
         } else {
             mVibrator.vibrate(100);
         }
+    }
 
+    public void click() {
+        VibrationEffect vibrationEffect;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            vibrationEffect = VibrationEffect.createOneShot(50, 10);
+            mVibrator.vibrate(vibrationEffect);
+        } else {
+            mVibrator.vibrate(50);
+        }
     }
 }
