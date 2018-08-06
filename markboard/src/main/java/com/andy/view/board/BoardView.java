@@ -150,7 +150,6 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         Log.d(TAG, "surface 创建成功");
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
-        mPaint.setFilterBitmap(true);
     }
 
     private int mWidth, mHeight;
@@ -189,11 +188,14 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
         }
 
         synchronized (BoardView.class) {
-
+            long startTime = System.currentTimeMillis();
             Canvas canvas = mHolder.lockCanvas();
             mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
             canvas.drawPaint(mPaint);
             mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
+
+            Log.d(TAG, "清除画板 " + (System.currentTimeMillis() - startTime) + " ms");
+            startTime = System.currentTimeMillis();
 
             if (bgBitmap != null) {
 
@@ -211,13 +213,18 @@ public abstract class BoardView extends SurfaceView implements SurfaceHolder.Cal
             } else {
                 canvas.drawColor(bgColor);
             }
+            Log.d(TAG, "画背景 " + (System.currentTimeMillis() - startTime) + " ms");
+            startTime = System.currentTimeMillis();
 
             for (Action action : mActionList) {
                 action.onDraw(canvas);
             }
+            Log.d(TAG, "画Action " + (System.currentTimeMillis() - startTime) + " ms");
+            startTime = System.currentTimeMillis();
 
             reDraw(canvas);
             mHolder.unlockCanvasAndPost(canvas);
+            Log.d(TAG, "画StandardView内容 " + (System.currentTimeMillis() - startTime) + " ms");
         }
     }
 

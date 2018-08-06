@@ -51,6 +51,23 @@ public class StandardBoard extends BoardView {
         StandardAction.showLabel(isShow, getContext());
     }
 
+    private boolean canSwitch = false;
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+                if (canSwitch) {
+                    getParent().requestDisallowInterceptTouchEvent(false);
+                } else {
+                    getParent().requestDisallowInterceptTouchEvent(true);
+                }
+                break;
+
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
     /**
      * 缩放的两个值，用来计算两者之间的比例值
      */
@@ -71,8 +88,11 @@ public class StandardBoard extends BoardView {
                     startPoint.set(event.getX(), event.getY());
                     matrix.postTranslate(dx, dy);
                     if (checkCrossing()) {
+                        canSwitch = true;
                         matrix.set(temp);
                     } else {
+                        canSwitch = false;
+                        Log.d(TAG, "移动 x:" + dx + " y:" + dy);
                         mBoard.setOffset(dx, dy);
                     }
                 } else if (getStatus() == MODE_ZOOM) {
@@ -85,6 +105,7 @@ public class StandardBoard extends BoardView {
                     if (checkMinimum() || checkCrossing()) {
                         matrix.set(temp);
                     } else {
+                        Log.d(TAG, "放大倍数 x:" + scale);
                         mBoard.setScale(scale, midPoint);
                     }
                 }
@@ -146,7 +167,7 @@ public class StandardBoard extends BoardView {
     /**
      * 创建Action
      */
-    public void createAction(StandardAction action) {
+    public <T extends StandardAction> T createAction(T action) {
         float[] values = new float[9];
         matrix.getValues(values);
         float left = values[2];
@@ -167,8 +188,7 @@ public class StandardBoard extends BoardView {
         action.x = (original.x - originalBitmapLeft) / (originalBitmapRight - originalBitmapLeft);
         action.y = (original.y - originalBitmapTop) / (originalBitmapBottom - originalBitmapTop);
 
-        Log.d(TAG, "创建Action成功");
-        addAction(action);
+        return action;
     }
 
     @Override

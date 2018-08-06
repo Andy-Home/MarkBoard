@@ -62,7 +62,8 @@ public class DemoActivity extends Activity {
         findViewById(R.id.fun4).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                vBoard.createAction(new StandardAction());
+                StandardAction action = vBoard.createAction(new StandardAction());
+                vBoard.addAction(action);
             }
         });
 
